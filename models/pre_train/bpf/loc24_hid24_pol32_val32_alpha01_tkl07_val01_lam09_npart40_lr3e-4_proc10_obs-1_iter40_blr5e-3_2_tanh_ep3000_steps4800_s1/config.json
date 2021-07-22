@@ -1,0 +1,93 @@
+{
+    "ac_kwargs":	{
+        "batch_s":	1,
+        "hidden":	[
+            [
+                24
+            ]
+        ],
+        "hidden_sizes_pol":	[
+            [
+                32
+            ]
+        ],
+        "hidden_sizes_rec":	[
+            24
+        ],
+        "hidden_sizes_val":	[
+            [
+                32
+            ]
+        ],
+        "lstm":	"rnn"
+    },
+    "actor_critic":	"RNNModelActorCritic",
+    "alpha":	0.1,
+    "clip_ratio":	0.2,
+    "dims":	{
+        "area_obs":	[
+            200.0,
+            500.0
+        ],
+        "bbox":	[
+            [
+                0.0,
+                0.0
+            ],
+            [
+                2700.0,
+                0.0
+            ],
+            [
+                2700.0,
+                2700.0
+            ],
+            [
+                0.0,
+                2700.0
+            ]
+        ],
+        "obstruct":	-1,
+        "seed":	"Generator(PCG64)"
+    },
+    "env_fn":	"<function <lambda> at 0x7fc100425158>",
+    "epochs":	3000,
+    "exp_name":	"loc24_hid24_pol32_val32_alpha01_tkl07_val01_lam09_npart40_lr3e-4_proc10_obs-1_iter40_blr5e-3_2_tanh_ep3000_steps4800_test",
+    "gamma":	0.99,
+    "lam":	0.9,
+    "load_dir":	null,
+    "logger":	{
+        "<rl_tools.utils.logx.EpochLogger object at 0x7fc100421ba8>":	{
+            "epoch_dict":	{},
+            "exp_name":	"loc24_hid24_pol32_val32_alpha01_tkl07_val01_lam09_npart40_lr3e-4_proc10_obs-1_iter40_blr5e-3_2_tanh_ep3000_steps4800_test",
+            "first_row":	true,
+            "log_current_row":	{},
+            "log_headers":	[],
+            "output_dir":	"../../exp/gru_8_acts/num_params/loc24_hid24_pol32_val32_alpha01_tkl07_val01_lam09_npart40_lr3e-4_proc10_obs-1_iter40_blr5e-3_2_tanh_ep3000_steps4800_test_s1",
+            "output_file":	{
+                "<_io.TextIOWrapper name='../../exp/gru_8_acts/num_params/loc24_hid24_pol32_val32_alpha01_tkl07_val01_lam09_npart40_lr3e-4_proc10_obs-1_iter40_blr5e-3_2_tanh_ep3000_steps4800_test_s1/progress.txt' mode='w' encoding='UTF-8'>":	{
+                    "mode":	"w"
+                }
+            }
+        }
+    },
+    "logger_kwargs":	{
+        "exp_name":	"loc24_hid24_pol32_val32_alpha01_tkl07_val01_lam09_npart40_lr3e-4_proc10_obs-1_iter40_blr5e-3_2_tanh_ep3000_steps4800_test",
+        "output_dir":	"../../exp/gru_8_acts/num_params/loc24_hid24_pol32_val32_alpha01_tkl07_val01_lam09_npart40_lr3e-4_proc10_obs-1_iter40_blr5e-3_2_tanh_ep3000_steps4800_test_s1"
+    },
+    "max_ep_len":	120,
+    "mp_mm":	[
+        5,
+        85
+    ],
+    "pi_lr":	0.0003,
+    "render":	false,
+    "save_freq":	500,
+    "save_gif":	false,
+    "seed":	2739863373,
+    "steps_per_epoch":	4800,
+    "target_kl":	0.07,
+    "train_pi_iters":	40,
+    "train_v_iters":	15,
+    "vf_lr":	0.005
+}

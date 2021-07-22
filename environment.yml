@@ -1,0 +1,21 @@
+name: ppo_rad
+channels:
+  - conda-forge
+  - anaconda
+  - pytorch
+  - numba
+dependencies:
+  - python=3.7   
+  - pip
+  - pytorch-cpu
+  - scipy
+  - psutil
+  - mpi4py
+  - joblib
+  - statsmodels
+  - gym
+  - matplotlib
+  - numba
+  - pandas
+  - pip:
+    - -r requirements.txt

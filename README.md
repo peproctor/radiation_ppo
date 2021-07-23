@@ -28,5 +28,7 @@ Change into ``/gym_rad_search`` and use `pip install -e .`.
 1. Train model with ``ppo.py``, see argument help and ppo function for parameter documentation
     - Model will be saved to directory ``/args.env_name``
     - Plot training results using the ``rl_plots.py`` in ``eval/``. Ex: ``python rl_plots --data_dir ../models/pre_train/gru_8_acts/bpf/model_name``
-2. Test the model using ``test_policy``, any model changes made to ``/ppo/core.py`` must also be made in ``/eval/core.py``
-    - Trained model parameters must be specified by user in the ``ac_kwargs`` dictionary
+    - Full training takes at least ~30 hours w/ 10 cores, a printout of metrics will display per epoch if everything is running correctly.
+2. Test the model using ``test_policy.py``, any model changes made to ``/ppo/core.py`` must also be made in ``/eval/core.py``
+    - Trained model parameters must be specified by user in the ``ac_kwargs`` dictionary, line 531 in ``test_policy.py``
+    - See argument help for more details

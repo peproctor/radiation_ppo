@@ -1,7 +1,5 @@
-import os
 from setuptools import setup
 
-PKG_DIR = os.path.dirname(os.path.abspath(__file__))
 
 setup(name='rl_tools',
       version='0.1',
@@ -9,9 +7,7 @@ setup(name='rl_tools',
       author='Philippe Proctor',
       package_dir={"": "rl_tools"},
       packages=["rl_tools"],
-      install_requires=[
-        f'gym_rad_search @ file://localhost{PKG_DIR}/gym_rad_search/'
-      ],
+      install_requires=[],
       python_requires=">=3.6",
       license='MIT',
       zip_safe=False)

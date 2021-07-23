@@ -16,8 +16,6 @@ The radiation_ppo code requires [OpenMPI](https://www.open-mpi.org/software/ompi
 2. Install the OpenAI gym environment `gym_rad_search`. 
 Change into ``/gym_rad_search`` and use `pip install -e .`.
 
-3. The radiation source search gym environment requires the [PyVisilibity](https://github.com/tsaoyu/PyVisiLibity) package. PyVisilibity is a Python binding for the C++ [VisiLibity1](https://github.com/karlobermeyer/VisiLibity1) library. It is recommended to clone this repo and change line 2136 `const bool PRINTING_DEBUG_DATA = true;` to false in visilibity.cpp before installing to silence excessive printing. The package can then be installed via `pip install -e .`. 
-
 ## Files
 - ``/algo``: contains the PPO implementation and neural network architecture 
 - ``/eval``: contains the scripts for evaluation and rendering of the trained models as well as the test environment generation and the test environments used in our paper. Gradient search and hybrid RID-FIM controller also included.

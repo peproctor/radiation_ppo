@@ -8,10 +8,13 @@ RAD-A2C architecture and proximal policy optimization (PPO) for radiation source
 The obstructions (blue rectangles) block line of sight between the detector and gamma source resulting in the detector only measuring background radiation. The left plot shows the detector path (black dots) in the environment, the agent's source location prediction (green triangle), and the gamma source (red star). The middle plot shows the measured gamma radiation intensity at each timestep and the right plot show the cumulative reward that the agent receives from its selected actions during an episode that is used during training to update the neural network weights. The episode terminates if the detector comes within 1.1 m of the gamma source (success) or if the episode length reaches 120 samples (failure).
 ## Installation
 It is recommended to use the Anaconda package manager. 
-1.After cloning this repository, create a virtual environment with the required packages `conda env create -f environment.yml`. Then activate this environment with `conda activate ppo_rad`.
+1.After cloning this repository, create a virtual environment with the required packages 
+`conda env create -f environment.yml`. 
+Then activate this environment with `conda activate ppo_rad`.
 The radiation_ppo code requires [OpenMPI](https://www.open-mpi.org/software/ompi/v4.1/) for parallel processing.
 
-2.Install the OpenAI gym environment `gym_rad_search`. Change into the ``/gym_rad_search`` and use the `pip install -e .`.
+2.Install the OpenAI gym environment `gym_rad_search`. 
+Change into ``/gym_rad_search`` and use `pip install -e .`.
 
 3.The radiation source search gym environment requires the [PyVisilibity](https://github.com/tsaoyu/PyVisiLibity) package. PyVisilibity is a Python binding for the C++ [VisiLibity1](https://github.com/karlobermeyer/VisiLibity1) library. It is recommended to clone this repo and change line 2136 `const bool PRINTING_DEBUG_DATA = true;` to false in visilibity.cpp before installing to silence excessive printing. The package can then be installed via `pip install -e .`. 
 

@@ -1,5 +1,5 @@
 # Proximal Policy Optimization for Radiation Source Search
-RAD-A2C architecture and proximal policy optimization (PPO) for radiation source search. Base code from OpenAI's [Spinningup](https://github.com/openai/spinningup) repo. Below is a demo of a test episode where the trained deep reinforcement learning agent is controlling a radiation detector to search for a gamma radiation source in a non-convex environment (7 obstructions). 
+RAD-A2C architecture and proximal policy optimization (PPO) for radiation source search from the forthcoming [paper](https://www.preprints.org/manuscript/202108.0018/v1). Base code from OpenAI's [Spinningup](https://github.com/openai/spinningup) repo. Below is a demo of a test episode where the trained deep reinforcement learning agent is controlling a radiation detector to search for a gamma radiation source in a non-convex environment (7 obstructions). 
 
 
 ![Radiation Source Search - Animated gif demo](demo/demo.gif)

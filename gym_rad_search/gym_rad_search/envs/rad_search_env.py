@@ -522,47 +522,52 @@ class RadSearch(gym.Env):
             self.bkg_intensity = params[1]
             self.src_coords = params[2]
             self.iter_count = len(meas)
+            data = np.array(data)/100
         else:
-            data = self.det_sto
+            data = np.array(self.det_sto)/100
             meas = self.meas_sto
-
+        
         if just_env:
             current_index = 0 
             plt.rc('font',size=14)
             fig, ax1 = plt.subplots(1,1,figsize=(7, 7),tight_layout=True)
-            ax1.scatter(self.src_coords[0]/100,self.src_coords[1]/100,70,c='red',marker='*',label='Source')
-            ax1.scatter(data[current_index][0]/100,data[current_index][1]/100,70, c='black',label='Detector')
+            ax1.scatter(self.src_coords[0]/100,self.src_coords[1]/100,60,c='red',marker='*',label='Source')
+            ax1.scatter(data[current_index,0],data[current_index,1],42, c='black',marker='^',label='Detector')
             ax1.grid()
             if not (obs == []):
                 for coord in obs:
-                        p_disp = Polygon(coord[0]/100)
+                        p_disp = Polygon(coord[0]/100,color='gray')
                         ax1.add_patch(p_disp)
             if not(loc_est is None):
-                ax1.scatter(loc_est[0][current_index][1]/100,loc_est[0][current_index][2]/100,70,c='green',marker='^',label='Loc. Pred.')
+                ax1.scatter(loc_est[0][current_index][1]/100,loc_est[0][current_index][2]/100,42,c='magenta',label='Loc. Pred.')
             ax1.set_xlim(0,self.search_area[1][0]/100)
             ax1.set_ylim(0,self.search_area[2][1]/100)
             ax1.set_xlabel('X[m]')
             ax1.set_ylabel('Y[m]')
-            ax1.legend()
+            ax1.legend(loc='lower left')
         else:
             plt.rc('font',size=12)
             fig, (ax1,ax2,ax3) = plt.subplots(1,3,figsize=(15, 5),tight_layout=True)
-            m_size = 15
+            m_size = 25
             def update(frame_number,data,ax1,ax2,ax3,src,area_dim, meas):
                 current_index = frame_number % (self.iter_count)
+                global loc
                 if current_index == 0:
-                    intensity_sci = "{:.2e}".format(self.intensity/1e4)
+                    intensity_sci = "{:.2e}".format(self.intensity)
                     ax1.cla()
-                    ax1.set_title('Activity: ' + intensity_sci +  ' [cps] Bkg: ' +str(self.bkg_intensity)+  ' [cps]')
+                    ax1.set_title('Activity: ' + intensity_sci +  ' [gps] Bkg: ' +str(self.bkg_intensity)+  ' [cps]')
+                    data_sub = data[current_index+1]-data[current_index]
+                    orient = math.degrees(math.atan2(data_sub[1],data_sub[0]))
                     ax1.scatter(src[0]/100,src[1]/100,m_size,c='red',marker='*',label='Source')
-                    ax1.scatter(data[current_index][0]/100,data[current_index][1]/100,m_size, c='black',label='Detector')
+                    ax1.scatter(data[current_index,0],data[current_index,1],m_size, c='black',marker=(3, 0, orient-90))
+                    ax1.scatter(-1000,-1000,m_size, c='black',marker='^',label='Detector')
                     ax1.grid()
                     if not (obs == []):
                         for coord in obs:
-                            p_disp = Polygon(coord[0]/100)
+                            p_disp = Polygon(coord[0]/100,color='gray')
                             ax1.add_patch(p_disp)
                     if not(loc_est is None):
-                        ax1.scatter(loc_est[0][current_index][1]/100,loc_est[0][current_index][2]/100,m_size,c='green',marker='^',label='Loc. Pred.')
+                        loc = ax1.scatter(loc_est[0][current_index][1]/100,loc_est[0][current_index][2]/100,m_size,c='magenta',label='Loc. Pred.')
                     ax1.set_xlim(0,area_dim[1][0]/100)
                     ax1.set_ylim(0,area_dim[2][1]/100)
                     ax1.set_xticks(np.linspace(0,area_dim[1][0]/100-2,5))
@@ -581,19 +586,23 @@ class RadSearch(gym.Env):
                     ax3.cla()
                     ax3.set_xlim(0,self.iter_count)
                     ax3.xaxis.set_major_formatter(FormatStrFormatter('%d'))
-                    ax3.set_ylim(min(ep_rew)-10,max(ep_rew)+10)
+                    ax3.set_ylim(min(ep_rew)-2,max(ep_rew)+2)
                     ax3.set_xlabel('n')
                     ax3.set_ylabel('Cumulative Reward')
-                    ax1.legend(loc='upper left')
+                    ax1.legend(loc='lower right')
                 else:
-                    ax1.scatter(data[current_index][0]/100,data[current_index][1]/100,m_size, c='black')
+                    loc.remove()
+                    data_sub = data[current_index+1]-data[current_index]
+                    orient = math.degrees(math.atan2(data_sub[1],data_sub[0]))
+                    ax1.scatter(data[current_index,0],data[current_index,1],m_size,marker=(3, 0, orient-90),c='black')
+                    ax1.plot(data[current_index-1:current_index+1,0],data[current_index-1:current_index+1,1],3,c='black',alpha=0.3,ls='--')
                     ax2.stem([current_index],[meas[current_index]],use_line_collection=True)
                     ax3.plot(range(current_index),ep_rew[:current_index],c='black')
                     if not(loc_est is None):
-                        ax1.scatter(loc_est[0][current_index][1]/100,loc_est[0][current_index][2]/100,m_size,c='green',marker='^',label='Loc. Pred.')
+                        loc = ax1.scatter(loc_est[0][current_index][1]/100,loc_est[0][current_index][2]/100,m_size*0.8,c='magenta',label='Loc. Pred.')
             ani = animation.FuncAnimation(fig,update, frames=len(ep_rew),fargs=(data,ax1,ax2,ax3,self.src_coords,self.search_area,meas))
             if save_gif:
-                writer = PillowWriter(fps=7)
+                writer = PillowWriter(fps=5)
                 if os.path.isdir(path+'/gifs/'):
                     ani.save(path+f'/gifs/test_{epoch_count}.gif',writer=writer)
                 else:

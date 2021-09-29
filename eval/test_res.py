@@ -16,17 +16,6 @@ def make_env(random_ng, num_obs):
     env = gym.make(env_name,**init_dims)
 
     return env
-def print_stats(stats):
-    keys = ['dEpLen','ndEpLen', 'dEpRet','ndEpRet',
-            'dIntDist','ndIntDist', 'dBkgDist', 'ndBkgDist',
-            'DoneCount','TotEpLen', 'LocEstErr' ]
-
-    for ii, key in enumerate(keys):
-        if key in ['dIntDist','ndIntDist', 'dBkgDist','ndBkgDist']:
-            #print('Mean '+ key +': ' +str(np.round(np.nanmean(stats[:,ii]),decimals=2)))
-            pass
-        else:
-            print('Mean '+ key +': ' +str(np.round(np.nanmean(stats[:,ii]),decimals=2)))
 
 def calc_stats(results,mc=None,plot=False,snr=None,control=None):
     stats = np.zeros((len(results[0]),len(results[0][0][1]),3))
@@ -70,18 +59,6 @@ def calc_stats(results,mc=None,plot=False,snr=None,control=None):
                 if np.nansum(stats[:,ii,1]) > 1:
                     d1 = DescrStatsW(stats[:,ii,0], weights=stats[:,ii,2])
                     lp_w, q1, weight_med, q3, hp_w = d1.quantile([0.025,0.25,0.5,0.75,0.975],return_pandas=False)
-                    #lp_whis, hp_whis = d1.quantile([0.25,0.75],return_pandas=False)
-                    #q1, q3 = d1.quantile([0.25,0.75],return_pandas=False)
-                    #low_whisk = q1 - 1.5*(q3-q1) #if q1 - 1.5*(q3-q1) >= 0 else 0
-                    #if low_whisk < 0 or low_whisk >= 100:
-                    #    low_whisk_pt = stats[:,ii,0].min()
-                    #else:
-                    #    low_whisk_pt = stats[np.where(stats[:,ii,0] >= low_whisk,True,False),ii,0].min()
-                    #high_whisk = q3 + 1.5*(q3-q1) 
-                    #if high_whisk >= 100:
-                    #    high_whisk_pt = stats[:,ii,0].max()
-                    #else:
-                    #    high_whisk_pt = stats[np.where(stats[:,ii,0] <= high_whisk,True,False),ii,0].max()
                     print('Weighted Median '+ key +': ' +str(np.round(weight_med,decimals=2))+ ' Weighted Percentiles (' +str(np.round(lp_w,3))+','+str(np.round(hp_w,3))+')')
                 
                 if plot:
@@ -141,31 +118,34 @@ def plots(arr1,arr2,num_ep,arr3=None,size_=None,save_p=None,type_='loc',dist=Fal
         idx_2 = 2
         tit = 'Int.'
         ylab = 'RMSE [cps]'
-
     fig, ax = plt.subplots()
     fig.set_size_inches((7,6))
-    ax.plot(range(arr2[0].shape[2]),np.nanmean(arr1[0][:,idx_1,:],axis=0)/100,label='PCRB BPF-A2C',linestyle='--',c='red',alpha=0.7)
-    ax.plot(range(arr2[0].shape[2]),arr2[0][:,idx_1,:].mean(axis=0)/100,label='PCRB RID-FIM',linestyle='--',c='black',alpha=0.7)
     ax.plot(range(arr2[0].shape[2]),arr2[0][:,idx_2].mean(axis=0)/100,label='RID-FIM',c='orange')
     ax.plot(range(arr2[0].shape[2]),arr1[0][:,idx_2].mean(axis=0)/100,label='BPF-A2C',c='darkcyan')
+    ax.plot(range(arr2[0].shape[2]),arr2[0][:,idx_1,:].mean(axis=0)/100,label='PCRB RID-FIM',linestyle='--',c='orange',alpha=0.7)
+    ax.plot(range(arr2[0].shape[2]),np.nanmean(arr1[0][:,idx_1,:],axis=0)/100,label='PCRB BPF-A2C',linestyle='--',c='darkcyan',alpha=0.7)
     if isinstance(arr3,tuple):
         ax.plot(range(arr2[0].shape[2]),arr3[0][:,idx_2].mean(axis=0)/100,label='RAD-A2C',c='darkblue',alpha=0.7)
     #plt.title(tit+f" RMSE over {num_ep} episodes, FIC: {arr2[0][:,6,0].sum()}, NN:{arr1[0][:,6,0].sum()} runs")
     ax.set_xlabel('n')
     ax.xaxis.set_major_formatter(FormatStrFormatter('%d'))
     ax.set_ylabel(ylab)
-    ax.set_ylim(0,12.2)
+    ax.set_ylim(0,11)
     ax.set_xlim(0,arr2[0].shape[2]-1)
     #plt.ylabel('cps')
     plt.legend()
-    if save_p: #and ((ep == 16) or (ep == 19) or (ep == 27)):
-        #plt.savefig(save_p+f'fisher_bound_epi_{num_ep}_fic_{round(arr2[0][:,6,0].sum())}_nn_{round(arr1[0][:,6,0].sum())}_.png',bbox_inches='tight')
+    if save_p and ((ep == 16) or (ep == 19) or (ep == 27)):
+        if ep == 16:
+            ax.xaxis.set_ticks(np.arange(0, arr2[0].shape[2], 2))
+        else:
+            ax.xaxis.set_ticks(np.arange(0, arr2[0].shape[2], 3))
+        plt.savefig(save_p+f'fisher_bound_epi_{num_ep}_fic_{round(arr2[0][:,6,0].sum())}_nn_{round(arr1[0][:,6,0].sum())}.pdf',bbox_inches='tight')
         #plt.savefig(save_p+'.png',bbox_inches='tight')
         plt.close()
     else:
         plt.close()
     
-    if type_ == 'loc':
+    if type_ == 'loc' and 0:
         fig, ax = plt.subplots()
         fig.set_size_inches((7,6))
         ax.plot(range(1,arr2[0].shape[2]),np.log(arr2[0][:,4,1:].mean(axis=0)),label='RID-FIM')
@@ -272,7 +252,7 @@ def fish_calc(data,mc_ep_len,overlap,control,env_set,samps):
                 else:
                     fish_bound[:,5]  = np.sqrt((np.linalg.norm(det_ls - env_set['env_'+str(elem)][0],axis=-1)**2).mean(axis=0))
                 fish_bound[:,4] = pl_hold
-                fish_bound[:,3] = np.sqrt((np.linalg.norm(loc_est[:,:,1:] - env_set['env_'+str(elem)][0],axis=2)**2).mean(axis=0))
+                fish_bound[:,3] = np.sqrt((np.linalg.norm(loc_est[:,1:,1:] - env_set['env_'+str(elem)][0],axis=2)**2).mean(axis=0))
                 fish_bound[:,2] = np.sqrt(np.square(loc_est[:,:,0] - (env_set['env_'+str(elem)][2]/1e4)).mean(axis=0))
                 fish_bound[:,1] = pl_hold#np.linalg.norm(fish_bound_arr[kk,:len_ep,1:],axis=1)
                 fish_bound[:,0] = pl_hold
@@ -312,14 +292,25 @@ def snr_hist(env_set):
     plt.show()
 
 if __name__ == '__main__':
+    """
+    test_res.py calculates the statistics (weighted median, percentiles) from a set of runs generated by test_policy.py
+    It also generates the PCRB plots for the BPF based methods. 
+    If 1000 episodes and 100 MC runs have been performed, the loading can be slow
+    """
     plt.rc('font',size=14)
     control_1 = 'rid-fim'
     control_2 = 'bpf-a2c'
     control_3 = 'rad-a2c'
-    num = np.arange(10,61)#[19,29,37]
-    samples = 5
-    obs = 0
+    num = np.arange(10,57)
+
+    #Maximum MC runs used per episode (keep the totals per algorithm the same), set to -1 to use all MC runs per calc.
+    samples = 5 
+    #Number of MC runs used in test policy.py
+    mc = 100 
+    #Number of episodes used in test policy.py
+    n = 100
     snr = 'high'
+    obs = 0
     seed = 0
     rng = np.random.default_rng(seed)
     env_fpath = 'test_envs/snr/test_env_dict_obs'
@@ -327,88 +318,74 @@ if __name__ == '__main__':
     env = make_env(rng,obs)
     env_set = joblib.load(env_path)
     #snr_hist(env_set)
-    res_nn = joblib.load('results/raw/n_999_bpf_mc100_nn_eplen_fim_r_div_freq_len_scale_inv_'+snr+'_v4.pkl')
-    res_fic = joblib.load('results/raw/n_999_bpf_mc100_fic_eplen_fim_r_div_freq_len_scale_inv_'+snr+'_v4.pkl')
-    res_rl = joblib.load('results/raw/n_999_bpf_mc100_rl_eplen_fim_r_div_freq_len_scale_inv_'+snr+'_v4.pkl')
+    res_bpf_a2c = joblib.load('results/raw/n_'+str(n)+'_mc'+str(mc)+'_'+control_2+'_freq_stats_'+snr+'_v4.pkl')
+    res_fic = joblib.load('results/raw/n_'+str(n)+'_mc'+str(mc)+'_'+control_1+'_freq_stats_'+snr+'_v4.pkl')
+    res_rad_a2c = joblib.load('results/raw/n_'+str(n)+'_mc'+str(mc)+'_'+control_3+'_freq_stats_'+snr+'_v4.pkl')
+
+    #If the data has been processed already, load from processed
     load_rid_fim = False
     load_bpf_a2c  = False
     load_rad_a2c = False
-    plot = True
-    print_results = False
-    statistics = False
-    sim_elem, key = common_elem(res_nn,res_fic,num[28])
+    #Plot the PCRB and source prediction RMSE
+    plot = False
+    statistics = True
+    sim_elem, key = common_elem(res_bpf_a2c,res_fic,num[28])
     num = np.arange(int(list(sim_elem.keys())[0][:2]),int(list(sim_elem.keys())[-5][:2])+1)
-    if print_results:
-        stat_fim = joblib.load('results/raw/n_999_bpf_mc100_fic_eplen_fim_r_div_scale_'+snr+'_v4.pkl')
-        stat_nn = joblib.load('results/raw/n_999_bpf_mc100_nn_eplen_fim_r_div_scale_'+snr+'_v4.pkl')
-        stat_rl = joblib.load('results/raw/n_999_bpf_mc100_rl_eplen_fim_r_div_scale_'+snr+'_v4.pkl')
-        print('*'*10)
-        print('FIM')
-        print_stats(stat_fim)
-        print('*'*10)
-        print('NN')
-        print_stats(stat_nn)
-        print('*'*10)
-        print('RL')
-        print_stats(stat_rl)
+
     if not load_rid_fim:
         print('Loading FIC results...')
-        res_fic_full = joblib.load('results/raw/n_999_bpf_mc100_fic_eplen_fim_r_div_full_dump_scale_inv_'+snr+'_v4.pkl')
+        res_fic_full = joblib.load('results/raw/n_'+str(n)+'_mc'+str(mc)+'_'+control_1+'_full_dump_'+snr+'_v4.pkl')
         print('Loaded FIC results...')
+        
         if statistics:
             calc_stats(res_fic_full,mc=100,plot=True,snr=snr,control=control_1)
-        
+            print('\n')
     else:
         print('Loading FIC results...')
-        result_fic = joblib.load('results/processed/'+str(samples)+'_fic_'+snr+'_processed_res'+str(num)+'.pkl')
+        result_fic = joblib.load('results/processed/'+str(samples)+'_'+control_1+'_'+snr+'_processed_res.pkl')
         print('Loaded FIC results...')
+        print('\n')
 
     if not load_bpf_a2c:
-        print('Loading NN results...')
-        res_nn_full = joblib.load('results/raw/n_999_bpf_mc100_nn_eplen_fim_r_div_full_dump_scale_inv_'+snr+'_v4.pkl')
-        print('Loaded NN results...')
+        print('Loading BPF-A2C results...')
+        res_bpf_a2c_full = joblib.load('results/raw/n_'+str(n)+'_mc'+str(mc)+'_'+control_2+'_full_dump_'+snr+'_v4.pkl')
+        print('Loaded BPF-A2C results...')
         if statistics:
-            calc_stats(res_nn_full,mc=100,plot=True,snr=snr,control=control_2)
+            calc_stats(res_bpf_a2c_full,mc=100,plot=True,snr=snr,control=control_2)
+            print('\n')
     else:
-        print('Loading NN results...')
-        result_nn = joblib.load('results/processed/'+str(samples)+'_nn_'+snr+'_processed_res'+str(num)+'.pkl')
-        print('Loaded NN results...')
-    if not load_rad_a2c:
-        print('Loading RL results...')
-        res_rl_full = joblib.load('results/raw/n_999_bpf_mc100_rl_eplen_fim_r_div_full_dump_scale_inv_'+snr+'_v4.pkl')
-        print('Loaded RL results...')
-        if statistics:
-            calc_stats(res_rl_full,mc=100,plot=True,snr=snr,control=control_3)
-    else:
-        print('Loading NN results...')
-        result_rl = joblib.load('results/processed/'+str(samples)+'_rl_'+snr+'_processed_res'+str(num)+'.pkl')
-        print('Loaded NN results...')
+        print('Loading BPF-A2C results...')
+        result_bpf_a2c = joblib.load('results/processed/'+str(samples)+'_'+control_2+'_'+snr+'_processed_res.pkl')
+        print('Loaded BPF-A2C results...')
+        print('\n')
 
-    if not load_rid_fim or not load_bpf_a2c or not load_rad_a2c:
+    if not load_rad_a2c:
+        print('Loading RAD-A2C results...')
+        res_rad_a2c_full = joblib.load('results/raw/n_'+str(n)+'_mc'+str(mc)+'_'+control_3+'_full_dump_'+snr+'_v4.pkl')
+        print('Loaded RAD-A2C results...')
+        
+        if statistics:
+            calc_stats(res_rad_a2c_full,mc=100,plot=True,snr=snr,control=control_3)
+            print('\n')
+
+    if not load_rid_fim or not load_bpf_a2c:
         result_fic = []
-        result_nn = []
-        result_rl = []
+        result_bpf_a2c = []
         for key in num:
             if not load_rid_fim:
                 result_fic.append(fish_calc(res_fic_full,key,sim_elem[str(key)+'_arr1'][2],control_1,env_set,samples))
             if not load_bpf_a2c:
-                result_nn.append(fish_calc(res_nn_full,key,sim_elem[str(key)+'_arr1'][2],control_2,env_set,samples))
-            if not load_rad_a2c:
-                result_rl.append(fish_calc(res_rl_full,key,sim_elem[str(key)+'_arr1'][2],control_3,env_set,samples))
+                result_bpf_a2c.append(fish_calc(res_bpf_a2c_full,key,sim_elem[str(key)+'_arr1'][2],control_2,env_set,samples))
         
         if not load_rid_fim:
             print('Saving FIC processed results...')
-            joblib.dump(result_fic,'results/'+str(samples)+'_fic_'+snr+'_processed_res'+str(num)+'.pkl')
+            joblib.dump(result_fic,'results/processed/'+str(samples)+'_'+control_1+'_'+snr+'_processed_res.pkl')
         if not load_bpf_a2c:
             print('Saving NN processed results...')
-            joblib.dump(result_nn,'results/'+str(samples)+'_nn_'+snr+'_processed_res'+str(num)+'.pkl')
-        if not load_rad_a2c:
-            print('Saving RL processed results...')
-            joblib.dump(result_rl,'results/'+str(samples)+'_rl_'+snr+'_processed_res'+str(num)+'.pkl')
+            joblib.dump(result_bpf_a2c,'results/processed/'+str(samples)+'_'+control_2+'_'+snr+'_processed_res.pkl')
+
     if plot:
         for jj,key in enumerate(num):
-            if result_nn[jj][0].shape[0] >= 150:
-                #plots(result_nn[jj],result_fic[jj],len(sim_elem[str(key)+'_arr1'][2]),arr3=None,dist=False,ep=key,
-                #    size_=key+1,type_='loc',save_p='/Users/pproctor/Desktop/thesis/figs/fin_exp/test/'+snr+'_'+str(samples)+'_n_999_l_'+str(key)+'_')
-                plots(result_nn[jj],result_fic[jj],len(sim_elem[str(key)+'_arr1'][2]),arr3=None,dist=False,ep=key,
-                    size_=key+1,type_='loc',save_p='/Users/pproctor/Desktop/thesis/figs/fin_exp/fish/'+snr+'_'+str(samples)+'_n_999_l_fisher_score-'+str(key))
+            if result_bpf_a2c[jj][0].shape[0] >= (mc*0.15):
+                plots(result_bpf_a2c[jj],result_fic[jj],0,arr3=None,dist=False,ep=key,
+                    size_=key+1,type_='loc',save_p='results/figs/'+snr+'_'+str(samples)+'_n_999_l_'+str(key)+'_')

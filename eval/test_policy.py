@@ -198,7 +198,7 @@ def select_model(fpath, ac_kwargs, bp_kwargs, grad_kwargs, model='rl',
                 J = np.einsum('ij,ikl->ijk',grad,grad[:,:,None])* np.tile((1/(pred[:,0]/denom + x[2]))[:,None,None],(ac.s_size,ac.s_size))
                 return (((J@x[3])*(ac.bpf.wp_prev[:,FIM,None,:])).sum(axis=0)).squeeze()
             elif act:
-                ret = ac.optim_action(np.append(x[-1],x[1][1:]),x[0],step=step)
+                ret = ac.optim_action(np.append(x[1][0],x[1][1:]),x[0],step=step)
                 return ret[0],ret[1], None
 
             elif post:
@@ -287,6 +287,15 @@ def calc_stats(results,mc=None,plot=False,snr=None,control=None,obs=None):
                 stats[jj,ii,0] = np.median(data[1][key]) if data[1][key].size > 0 else np.nan
                 stats[jj,ii,1] = np.var(data[1][key])/data[1][key].shape[0] if data[1][key].size > 0 else np.nan
             stats[jj,ii,2] = data[1][key].shape[0]
+            if key in 'dEpLen': #and isinstance(data[0],np.ndarray):
+                uni,counts = np.unique(data[1][key],return_counts=True)
+                sort_idx = np.argsort(counts)
+                if len(sort_idx) > num_elem:
+                    d_count_dist[jj,0,:] = uni[sort_idx][-num_elem:]
+                    d_count_dist[jj,1,:] = counts[sort_idx][-num_elem:]
+                else:
+                    d_count_dist[jj,0,num_elem-len(sort_idx):] = uni[sort_idx][-num_elem:]
+                    d_count_dist[jj,1,num_elem-len(sort_idx):] = counts[sort_idx][-num_elem:]
 
     for ii, key in enumerate(keys):
         if key in ['dIntDist','ndIntDist', 'dBkgDist','ndBkgDist','dEpRet','ndEpRet','ndEpLen','TotEpLen']:
@@ -493,22 +502,22 @@ def run_policy(env, env_set, render=True, save_gif=False, save_path=None,
     mc_stats['TotEpLen'] = tot_ep_len
     mc_stats['LocEstErr'] = loc_est_err
     results = [loc_est_ls, FIM_bound, J_score_ls, det_ls]
-    print(f'Finished run {n}!, done count: {done_count}')
+    print(f'Finished episode {n}!, completed count: {done_count}')
     return (results,mc_stats)
 
 if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument('--fpath', type=str,default='../models/train/bpf/loc24_hid24_pol32_val32_alpha01_tkl07_val01_lam09_npart40_lr3e-4_proc10_obs-1_iter40_blr5e-3_2_tanh_5_ep3000_steps4800_s1',
+    parser.add_argument('--fpath', type=str,default='../models/pre_train/rad_a2c/loc24_hid24_pol32_val32_alpha01_tkl07_val01_lam09_npart40_lr3e-4_proc10_obs-1_iter40_blr5e-3_2_tanh_ep3000_steps4800_s1',
     help='Specify model directory, Ex: ../models/train/bpf/model_dir')
-    parser.add_argument('--episodes', '-n', type=int, default=1000,help='Number of episodes to test on, option: [1-1000]') 
-    parser.add_argument('--render', '-r',type=bool, default=False,help='Produce gif of agent in environment')
+    parser.add_argument('--episodes', '-n', type=int, default=100,help='Number of episodes to test on, option: [1-1000]') 
+    parser.add_argument('--render', '-r',type=bool, default=False,help='Produce gif of agent in environment, last episode of n episodes. Num_cpu should be 1')
     parser.add_argument('--save_gif', type=bool,default=False, help='Save gif of the agent in model folder, render must be true')
     parser.add_argument('--control', type=str, default='rad-a2c',help='Control algorithm, options: [rad-a2c,bpf-a2c,gs,rid-fim]')
     parser.add_argument('--snr', type=str, default='high',help='SNR of environment, options: [low,med,high]')
-    parser.add_argument('--num_obs', type=int, default=1,help='Number of obstructions in environment, options:[1,3,5,7]')
-    parser.add_argument('--mc_runs', type=int, default=1,help='Number of Monte Carlo runs per episode')
-    parser.add_argument('--num_cpu', '-ncpu', type=int, default=1,help='Number of cpus to run episodes across')
+    parser.add_argument('--num_obs', type=int, default=0,help='Number of obstructions in environment, options:[1,3,5,7]')
+    parser.add_argument('--mc_runs', type=int, default=100,help='Number of Monte Carlo runs per episode')
+    parser.add_argument('--num_cpu', '-ncpu', type=int, default=10,help='Number of cpus to run episodes across')
     parser.add_argument('--fisher',type=bool, default=False,help='Calculate the posterior Cramer-Rao Bound for BPF based methods')
     parser.add_argument('--save_results', type=bool, default=False, help='Save list of results across episodes and runs')
     args = parser.parse_args()
@@ -542,17 +551,16 @@ if __name__ == '__main__':
     func = partial(run_policy, env, env_set, args.render,args.save_gif, 
                    args.fpath, args.mc_runs, args.control,args.fisher,
                    ac_kwargs,bp_kwargs,grad_kwargs, args.episodes)
-    
     mc_results = []
     print(f'Number of cpus available: {os.cpu_count()}')
     print('Starting pool')
     p = Pool(processes=args.num_cpu)
     mc_results.append(p.map(func,params)) 
     stats, len_freq = calc_stats(mc_results,mc=args.mc_runs,plot=False,snr=args.snr,control=args.control,obs=args.num_obs)
-    print('Saving results..')
     
     if args.save_results:
-        joblib.dump(stats,'results/raw/n_999_bpf_mc'+str(args.mc_runs)+'_'+args.control+'_'+'eplen_fim_r_div_scale_'+args.snr+'_v4.pkl')
-        joblib.dump(len_freq,'results/raw/n_999_bpf_mc'+str(args.mc_runs)+'_'+args.control+'_'+'eplen_fim_r_div_freq_len_scale_inv_'+args.snr+'_v4.pkl')
-        joblib.dump(mc_results,'results/raw/n_999_bpf_mc'+str(args.mc_runs)+'_'+args.control+'_'+'eplen_fim_r_div_full_dump_scale_inv_'+args.snr+'_v4.pkl')
+        print('Saving results..')
+        joblib.dump(stats,'results/raw/n_'+str(args.episodes)+'_mc'+str(args.mc_runs)+'_'+args.control+'_'+'stats_'+args.snr+'_v4.pkl')
+        joblib.dump(len_freq,'results/raw/n_'+str(args.episodes)+'_mc'+str(args.mc_runs)+'_'+args.control+'_'+'freq_stats_'+args.snr+'_v4.pkl')
+        joblib.dump(mc_results,'results/raw/n_'+str(args.episodes)+'_mc'+str(args.mc_runs)+'_'+args.control+'_'+'full_dump_'+args.snr+'_v4.pkl')
       

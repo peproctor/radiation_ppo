@@ -363,7 +363,11 @@ def run_policy(env, env_set, render=True, save_gif=False, save_path=None,
     stat_buff = core.StatBuff()
     stat_buff.update(o[0])
 
-    max_ep_len= env._max_episode_steps
+    try:
+        max_ep_len= env._max_episode_steps
+    except:
+        max_ep_len= env.env._max_episode_steps
+
    
     #Set the algorithm that will be used for action selection
     get_action = select_model(save_path, ac_kwargs, bp_kwargs, grad_kwargs, model=control, 
@@ -534,7 +538,11 @@ if __name__ == '__main__':
     #Load set of test envs 
     env = make_env(rng,args.num_obs)
     env_path = env_fpath + str(args.num_obs) if args.snr is None else env_fpath + str(args.num_obs)+'_'+args.snr+'_v4'
-    env_set = joblib.load(env_path)
+
+    try:
+        env_set = joblib.load(env_path)
+    except:
+        env_set = joblib.load(f'eval/{env_path}')
 
     #Model parameters, must match the model being loaded
     ac_kwargs = {'batch_s': 1, 'hidden': [24], 'hidden_sizes_pol': [32], 'hidden_sizes_rec': [24], 

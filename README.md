@@ -6,6 +6,10 @@ RAD-A2C architecture and proximal policy optimization (PPO) for radiation source
 
 
 The obstructions (gray rectangles) block line of sight between the detector and gamma source resulting in the detector only measuring background radiation. The left plot shows the detector positions (black triangles) in the environment, the agent's source location prediction (magenta circles), and the gamma source (red star). The middle plot shows the measured gamma radiation intensity at each timestep and the right plot show the cumulative reward that the agent receives from its selected actions during an episode that is used during training to update the neural network weights. The episode terminates if the detector comes within 1.1 m of the gamma source (success) or if the episode length reaches 120 samples (failure).
+
+## Pre-Installation
+Install Swig with `sudo apt install swig` or by following [these instructions](https://github.com/swig/swig/wiki/Getting-Started) - required for VisiLibity library, used in the RadSearch environment.
+
 ## Installation
 It is recommended to use the Anaconda package manager. 
 1. After cloning this repository, create a virtual environment with the required packages 

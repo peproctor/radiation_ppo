@@ -1,3 +1,4 @@
 #-e file:///gym_rad_search/
 -e .
 git+https://github.com/peproctor/PyVisiLibity.git
+gym==0.20.0

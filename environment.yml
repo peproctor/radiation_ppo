@@ -13,7 +13,6 @@ dependencies:
   - mpi4py
   - joblib
   - statsmodels
-  - gym
   - matplotlib
   - numba
   - pandas
